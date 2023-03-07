@@ -1,6 +1,6 @@
 {
   "name": "ChatGPT",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "main": "./integration.js",
   "description": "Chat GPT",
   "private": true,
