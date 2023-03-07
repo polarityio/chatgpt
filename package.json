@@ -1,0 +1,11 @@
+{
+  "name": "ChatGPT",
+  "version": "3.0.0-4",
+  "main": "./integration.js",
+  "description": "Chat GPT",
+  "private": true,
+  "dependencies": {
+    "postman-request": "^2.88.1-postman.32",
+    "async": "^3.2.4"
+  }
+}
