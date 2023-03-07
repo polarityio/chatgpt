@@ -1,0 +1,45 @@
+{
+  "name": "ChatGPT",
+  "acronym": "GPT",
+  "defaultColor": "light-gray",
+  "description": "Ask OpenAI's ChatGPT a question and get an answer",
+  "customTypes": [
+    {
+      "key": "question",
+      "regex": "^(?<!\\n|\\r\\n)[ \\t]*.{5,256}\\?[ \\t]*(?!\\n|\\r\\n)$"
+    }
+  ],
+  "onDemandOnly": true,
+  "styles": [
+    "./styles/styles.less"
+  ],
+  "block": {
+    "component": {
+      "file": "./components/block.js"
+    },
+    "template": {
+      "file": "./templates/block.hbs"
+    }
+  },
+  "request": {
+    "cert": "",
+    "key": "",
+    "passphrase": "",
+    "ca": "",
+    "proxy": ""
+  },
+  "logging": {
+    "level": "info"
+  },
+  "options": [
+    {
+      "key": "apiKey",
+      "name": "API Key",
+      "description": "An OpenAPI ChatGPT API key",
+      "default": "",
+      "type": "password",
+      "userCanEdit": false,
+      "adminOnly": true
+    }
+  ]
+}
