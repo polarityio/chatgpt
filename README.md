@@ -6,6 +6,7 @@ The Polarity ChatGPT integration leverages the OpenAI ChatGPT REST API to answer
 
 The ChatGPT API is limited to conversations with less than 4096 tokens.  The integration keeps the history of your chat locally to provide context for ChatGPT but will not work over 4096 tokens. The integration includes a token counter and allows you to clear your conversation if it is getting too long.
 
+<img src="assets/overlay.png" width="50%">
 
 ## ChatGPT Integration Options
 
