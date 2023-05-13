@@ -15,6 +15,10 @@ The ChatGPT API is limited to conversations with less than 4096 tokens.  The int
 
 A valid OpenAI Chat GPT API key.
 
+### OpenAI Model
+
+The ID of the model to use when accessing the OpenAI ChatGPT API. Your API key must have access to the model or you will receive a 404 error.
+
 ## Installation Instructions
 
 Installation instructions for integrations are provided on the [PolarityIO GitHub Page](https://polarityio.github.io/).

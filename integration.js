@@ -80,7 +80,7 @@ async function askQuestion(messages, options) {
       Authorization: `Bearer ${options.apiKey}`
     },
     body: {
-      model: 'gpt-3.5-turbo-0301',
+      model: options.model.value,
       temperature: 0.2,
       messages
     },

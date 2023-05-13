@@ -2,7 +2,7 @@ module.exports = {
   name: 'ChatGPT',
   acronym: 'GPT',
   defaultColor: 'light-gray',
-  description: 'Ask OpenAI\'s ChatGPT a question and get an answer',
+  description: "Ask OpenAI's ChatGPT a question and get an answer",
   customTypes: [
     {
       key: 'question',
@@ -48,6 +48,29 @@ module.exports = {
       description: 'An OpenAPI ChatGPT API key',
       default: '',
       type: 'password',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'model',
+      name: 'OpenAI Model',
+      description: 'The ID of the model to use when accessing the OpenAI ChatGPT API.  Your API key must have access to the model or you will receive a 404 error.',
+      default: {
+        value: 'gpt-3.5-turbo',
+        display: 'GPT 3.5 Turbo'
+      },
+      type: 'select',
+      options: [
+        {
+          value: 'gpt-3.5-turbo',
+          display: 'GPT 3.5 Turbo'
+        },
+        {
+          value: 'gpt-4',
+          display: 'GPT 4'
+        }
+      ],
+      multiple: false,
       userCanEdit: false,
       adminOnly: true
     }
