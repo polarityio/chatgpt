@@ -19,29 +19,57 @@ async function doLookup(entities, options, cb) {
   Logger.trace({ entities, options }, 'doLookup');
   try {
     await async.each(entities, async (entity) => {
-      const { body, statusCode } = await askQuestion(createMessages(entity.value), options);
-      // Add the question to the beginning of our choices array
-      body.choices.unshift({
-        message: {
-          role: 'user',
-          content: entity.value
-        }
-      });
-
-      lookupResults.push({
-        entity: {
-          ...entity,
-          value: 'ChatGPT'
-        },
-        data: {
-          summary: [entity.value],
-          details: {
-            question: entity.value,
-            response: body,
-            username: options._request.user.username
+      if (options.showDisclaimer) {
+        lookupResults.push({
+          entity: {
+            ...entity,
+            value: 'ChatGPT'
+          },
+          data: {
+            summary: [entity.value],
+            details: {
+              question: entity.value,
+              username: options._request.user.username,
+              showDisclaimer: options.showDisclaimer,
+              disclaimer: options.disclaimer,
+              response: {
+                choices: [
+                  {
+                    message: {
+                      role: 'user',
+                      content: entity.value
+                    }
+                  }
+                ]
+              }
+            }
           }
-        }
-      });
+        });
+      } else {
+        const { body, statusCode } = await askQuestion(createMessages(entity.value), options);
+        // Add the question to the beginning of our choices array
+        body.choices.unshift({
+          message: {
+            role: 'user',
+            content: entity.value
+          }
+        });
+
+        lookupResults.push({
+          entity: {
+            ...entity,
+            value: 'ChatGPT'
+          },
+          data: {
+            summary: [entity.value],
+            details: {
+              question: entity.value,
+              response: body,
+              username: options._request.user.username
+            }
+          }
+        });
+      }
     });
     Logger.trace({ lookupResults }, 'Lookup Results');
     cb(null, lookupResults);

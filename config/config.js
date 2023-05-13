@@ -40,7 +40,7 @@ module.exports = {
     // to false in a production environment.
     rejectUnauthorized: true
   },
-  logging: { level: 'info' },
+  logging: { level: 'trace' },
   options: [
     {
       key: 'apiKey',
@@ -54,7 +54,8 @@ module.exports = {
     {
       key: 'model',
       name: 'OpenAI Model',
-      description: 'The ID of the model to use when accessing the OpenAI ChatGPT API.  Your API key must have access to the model or you will receive a 404 error.',
+      description:
+        'The ID of the model to use when accessing the OpenAI ChatGPT API.  Your API key must have access to the model or you will receive a 404 error.',
       default: {
         value: 'gpt-3.5-turbo',
         display: 'GPT 3.5 Turbo'
@@ -71,6 +72,27 @@ module.exports = {
         }
       ],
       multiple: false,
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'showDisclaimer',
+      name: 'Show Search Disclaimer',
+      description:
+        'If enabled, the integration will show a disclaimer the user most accept before running a search.',
+      default: false,
+      type: 'boolean',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'disclaimer',
+      name: 'Search Disclaimer Content',
+      description:
+        'A disclaimer that users must review before the integration will submit questions to the ChatGPT API.',
+      default:
+        'Please affirm that no confidential information will be shared with your submission to ChatGPT. Click Accept to run your search.',
+      type: 'text',
       userCanEdit: false,
       adminOnly: true
     }
