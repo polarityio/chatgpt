@@ -46,6 +46,7 @@ async function doLookup(entities, options, cb) {
           }
         });
       } else {
+        maybeLogSearch(entity.value, options);
         const { body, statusCode } = await askQuestion(createMessages(entity.value), options);
         // Add the question to the beginning of our choices array
         body.choices.unshift({
@@ -138,9 +139,23 @@ async function askQuestion(messages, options) {
   }
 }
 
+function maybeLogSearch(search, options) {
+  if (options.logSearches) {
+    Logger.info(
+      {
+        search,
+        username: options._request.user.username,
+        userId: options._request.user.id
+      },
+      'ChatGPT Search'
+    );
+  }
+}
+
 async function onMessage(payload, options, cb) {
   try {
     const messages = payload.choices.map((choice) => choice.message);
+    maybeLogSearch(messages[messages.length - 1].content, options);
     const { body, statusCode } = await askQuestion(addPromptToMessages(messages), options);
     const combinedResults = payload.choices.concat(body.choices);
     body.choices = combinedResults;

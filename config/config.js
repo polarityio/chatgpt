@@ -40,7 +40,7 @@ module.exports = {
     // to false in a production environment.
     rejectUnauthorized: true
   },
-  logging: { level: 'trace' },
+  logging: { level: 'info' },
   options: [
     {
       key: 'apiKey',
@@ -79,7 +79,7 @@ module.exports = {
       key: 'showDisclaimer',
       name: 'Show Search Disclaimer',
       description:
-        'If enabled, the integration will show a disclaimer the user most accept before running a search.',
+        'If enabled, the integration will show a disclaimer the user must accept before running a search.',
       default: false,
       type: 'boolean',
       userCanEdit: false,
@@ -95,6 +95,16 @@ module.exports = {
       type: 'text',
       userCanEdit: false,
       adminOnly: true
-    }
+    },
+    {
+      key: 'logSearches',
+      name: 'Log Searches',
+      description:
+          'If enabled, the integration will log all searches sent to ChatGPT.',
+      default: false,
+      type: 'boolean',
+      userCanEdit: false,
+      adminOnly: true
+    },
   ]
 };

@@ -48,7 +48,7 @@ polarity.export = PolarityComponent.extend({
     this.set('isRunning', true);
     let choices = this.get('details.response.choices');
 
-    // If we're showing the dislaimer then there will be no question
+    // If we're showing the disclaimer then there will be no question
     // and we don't need to add anything to the choices array.
     if (this.get('question')) {
       choices.push({
