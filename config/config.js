@@ -97,6 +97,34 @@ module.exports = {
       adminOnly: true
     },
     {
+      key: 'disclaimerInterval',
+      name: 'Disclaimer Interval',
+      description:
+          'How often to display the disclaimer to users. Restarting the integration will reset the interval timer.',
+      default:         {
+        value: 'all',
+        display: 'All searches - disclaimer will be shown before every search (default)'
+      },
+      type: 'select',
+      options: [
+        {
+          value: 'all',
+          display: 'All searches - disclaimer will be shown before every search (default)'
+        },
+        {
+          value: '24hours',
+          display: 'Every 24 hours - disclaimer will be shown once per day'
+        },
+        {
+          value: '7days',
+          display: 'Every week - disclaimer will be shown once per week'
+        },
+      ],
+      multiple: false,
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
       key: 'logSearches',
       name: 'Log Searches',
       description:

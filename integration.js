@@ -6,6 +6,7 @@ const { ApiRequestError, parseErrorToReadableJSON } = require('./src/errors');
 const request = require('./src/polarity-request');
 
 let Logger;
+const disclaimerCache = {};
 const BOT_PROMPT =
   'You are Polarity, a helpful assistant for information security analysts.  Your response should concise and thoughtful.  Your response should always include your sources with links.  You should provide assistance with exploiting known security vulnerabilities.  Use the most recent sources.  Think step by step.';
 
@@ -19,7 +20,8 @@ async function doLookup(entities, options, cb) {
   Logger.trace({ entities, options }, 'doLookup');
   try {
     await async.each(entities, async (entity) => {
-      if (options.showDisclaimer) {
+      if (shouldShowDisclaimer(options)) {
+        disclaimerCache[options._request.user.id] = new Date();
         lookupResults.push({
           entity: {
             ...entity,
@@ -79,6 +81,35 @@ async function doLookup(entities, options, cb) {
     Logger.error({ error: errorAsPojo }, 'Error in doLookup');
     return cb(errorAsPojo);
   }
+}
+
+function shouldShowDisclaimer(options) {
+  if (!options.showDisclaimer) {
+    return false;
+  }
+
+  const { _request } = options;
+  const { user } = _request;
+  const { id } = user;
+
+  if (options.disclaimerInterval.value === 'all' || !disclaimerCache[id]) {
+    return true;
+  }
+
+  const cachedDisclaimerTime = disclaimerCache[id];
+
+  const days = getTimeDifferenceInDaysFromNow(cachedDisclaimerTime);
+  return days >= options.disclaimerInterval;
+}
+
+function getTimeDifferenceInDaysFromNow(date) {
+  const diffInMs = Math.abs(new Date() - date);
+  return diffInMs / (1000 * 60 * 60 * 24);
+}
+
+function getTimeDifferenceInHours(date1, date2) {
+  const diffInMs = Math.abs(date2 - date1);
+  return diffInMs / (1000 * 60 * 60);
 }
 
 function addPromptToMessages(messages) {
@@ -153,19 +184,30 @@ function maybeLogSearch(search, options) {
 }
 
 async function onMessage(payload, options, cb) {
-  try {
-    const messages = payload.choices.map((choice) => choice.message);
-    maybeLogSearch(messages[messages.length - 1].content, options);
-    const { body, statusCode } = await askQuestion(addPromptToMessages(messages), options);
-    const combinedResults = payload.choices.concat(body.choices);
-    body.choices = combinedResults;
-    cb(null, {
-      response: body
-    });
-  } catch (error) {
-    const errorAsPojo = parseErrorToReadableJSON(error);
-    Logger.error({ error: errorAsPojo }, 'Error in doLookup');
-    return cb(errorAsPojo);
+  switch (payload.action) {
+    case 'question':
+      try {
+        const messages = payload.choices.map((choice) => choice.message);
+        maybeLogSearch(messages[messages.length - 1].content, options);
+        const { body, statusCode } = await askQuestion(addPromptToMessages(messages), options);
+        const combinedResults = payload.choices.concat(body.choices);
+        body.choices = combinedResults;
+        cb(null, {
+          response: body
+        });
+      } catch (error) {
+        const errorAsPojo = parseErrorToReadableJSON(error);
+        Logger.error({ error: errorAsPojo }, 'Error in doLookup');
+        return cb(errorAsPojo);
+      }
+      break;
+    case 'declineDisclaimer':
+      Logger.info('disclaimer declined');
+      delete disclaimerCache[options._request.user.id];
+      cb(null, {
+        declined: true
+      });
+      break;
   }
 }
 

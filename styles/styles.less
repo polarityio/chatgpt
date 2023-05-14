@@ -1,3 +1,5 @@
+@disclaimer-color: #5cb85c;
+
 .chat-bubble {
   border-radius: 4px;
   padding: 8px;
@@ -37,10 +39,10 @@
   }
 
   &.disclaimer {
-    border: 1px solid lighten(#ff4559, 10%);
-    border-bottom: 2px solid lighten(#ff4559, 10%);
+    border: 1px solid lighten(@disclaimer-color, 10%);
+    border-bottom: 2px solid lighten(@disclaimer-color, 10%);
     background-color: #fff;
-    background-color: lighten(#ff4559, 20%);
+    background-color: lighten(@disclaimer-color, 20%);
     white-space: normal;
   }
 }
@@ -117,11 +119,11 @@
     overflow-y: auto;
   }
 
-  .error-close{
+  .error-close {
     color: #FF4559; //$p-red
     cursor: pointer;
 
-    &:hover{
+    &:hover {
       color: darken(#FF4559, 20%);
     }
   }

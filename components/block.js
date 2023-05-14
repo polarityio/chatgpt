@@ -36,6 +36,22 @@ polarity.export = PolarityComponent.extend({
       this.set('details.showDisclaimer', false);
       this.submitQuestion();
     },
+    declineDisclaimer: function () {
+      const payload = {
+        action: 'declineDisclaimer'
+      };
+
+      this.sendIntegrationMessage(payload)
+        .then((result) => {
+          this.set('details.response.choices', []);
+          this.set('details.showDisclaimer', false);
+        })
+        .catch((error) => {
+          console.error(error);
+          this.set('errorMessage', JSON.stringify(error, null, 2));
+          Ember.run.scheduleOnce('afterRender', this, this.scrollToErrorMessage);
+        });
+    },
     closeError: function () {
       this.set('errorMessage', '');
     }

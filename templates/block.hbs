@@ -56,6 +56,9 @@
       <div class="error-item">{{errorMessage}}</div>
     </div>
   {{/if}}
+  <div class="p-footnote">
+    All searches are logged
+  </div>
 </div>
 {{#if (gt details.response.usage.total_tokens tokenWarningAmount)}}
   <div class="token-warning p-footnote">
@@ -64,7 +67,7 @@
 {{/if}}
 {{#if details.showDisclaimer}}
   <div class="message-box w-100 d-flex justify-content-end">
-    <button class="btn btn-outline-secondary" type="button">
+    <button {{action "declineDisclaimer"}} class="btn btn-outline-secondary" type="button">
       Decline
     </button>
     <button {{action "acceptDisclaimer"}} class="btn btn-outline-secondary ml-1" type="button">
