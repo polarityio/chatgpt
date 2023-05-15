@@ -16,6 +16,10 @@
     <div>
       <span>Accept disclaimer to run your search</span>
     </div>
+  {{else if details.disclaimerDeclined}}
+    <div>
+      <span>Search declined.</span>
+    </div>
   {{else}}
     <div>
       <span class="p-action" {{action "clearChat"}}>clear chat</span>
@@ -56,9 +60,9 @@
       <div class="error-item">{{errorMessage}}</div>
     </div>
   {{/if}}
-  <div class="p-footnote">
-    All searches are logged
-  </div>
+  {{#if details.logSearches}}
+    <div class="p-footnote logging-disclaimer">All searches are logged</div>
+  {{/if}}
 </div>
 {{#if (gt details.response.usage.total_tokens tokenWarningAmount)}}
   <div class="token-warning p-footnote">

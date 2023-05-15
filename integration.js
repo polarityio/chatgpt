@@ -34,6 +34,7 @@ async function doLookup(entities, options, cb) {
               username: options._request.user.username,
               showDisclaimer: options.showDisclaimer,
               disclaimer: options.disclaimer,
+              logSearches: options.logSearches,
               response: {
                 choices: [
                   {
@@ -48,7 +49,7 @@ async function doLookup(entities, options, cb) {
           }
         });
       } else {
-        maybeLogSearch(entity.value, options);
+        maybeLogSearch(entity.value, false, options);
         const { body, statusCode } = await askQuestion(createMessages(entity.value), options);
         // Add the question to the beginning of our choices array
         body.choices.unshift({
@@ -68,7 +69,8 @@ async function doLookup(entities, options, cb) {
             details: {
               question: entity.value,
               response: body,
-              username: options._request.user.username
+              username: options._request.user.username,
+              logSearches: options.logSearches
             }
           }
         });
@@ -170,15 +172,17 @@ async function askQuestion(messages, options) {
   }
 }
 
-function maybeLogSearch(search, options) {
+function maybeLogSearch(search, acceptedDisclaimer, options) {
   if (options.logSearches) {
     Logger.info(
       {
+        viewedDisclaimer: acceptedDisclaimer,
         search,
+        searchRan: true,
         username: options._request.user.username,
         userId: options._request.user.id
       },
-      'ChatGPT Search'
+      'ChatGPT Search Ran'
     );
   }
 }
@@ -188,7 +192,8 @@ async function onMessage(payload, options, cb) {
     case 'question':
       try {
         const messages = payload.choices.map((choice) => choice.message);
-        maybeLogSearch(messages[messages.length - 1].content, options);
+        const acceptedDisclaimer = payload.acceptedDisclaimer ? payload.acceptedDisclaimer : false;
+        maybeLogSearch(messages[messages.length - 1].content, acceptedDisclaimer, options);
         const { body, statusCode } = await askQuestion(addPromptToMessages(messages), options);
         const combinedResults = payload.choices.concat(body.choices);
         body.choices = combinedResults;
@@ -202,7 +207,18 @@ async function onMessage(payload, options, cb) {
       }
       break;
     case 'declineDisclaimer':
-      Logger.info('disclaimer declined');
+      if (options.logSearches) {
+        const messages = payload.search.map((choice) => choice.message);
+        Logger.info(
+          {
+            search: messages[messages.length - 1].content,
+            searchRan: false,
+            username: options._request.user.username,
+            userId: options._request.user.id
+          },
+          'Disclaimer Declined'
+        );
+      }
       delete disclaimerCache[options._request.user.id];
       cb(null, {
         declined: true

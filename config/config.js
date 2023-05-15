@@ -109,7 +109,7 @@ module.exports = {
       options: [
         {
           value: 'all',
-          display: 'All searches - disclaimer will be shown before every search (default)'
+          display: 'All searches - disclaimer will be shown before every new search (default)'
         },
         {
           value: '24hours',

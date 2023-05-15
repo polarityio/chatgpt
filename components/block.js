@@ -34,17 +34,20 @@ polarity.export = PolarityComponent.extend({
     },
     acceptDisclaimer: function () {
       this.set('details.showDisclaimer', false);
+      this.set('details.acceptedDisclaimer', true);
       this.submitQuestion();
     },
     declineDisclaimer: function () {
       const payload = {
-        action: 'declineDisclaimer'
+        action: 'declineDisclaimer',
+        search: this.get('details.response.choices')
       };
 
       this.sendIntegrationMessage(payload)
         .then((result) => {
           this.set('details.response.choices', []);
           this.set('details.showDisclaimer', false);
+          this.set('details.disclaimerDeclined', true);
         })
         .catch((error) => {
           console.error(error);
@@ -74,14 +77,17 @@ polarity.export = PolarityComponent.extend({
         }
       });
     }
-
+    this.set('details.disclaimerDeclined', false);
     this.get('block').notifyPropertyChange('data');
 
     Ember.run.scheduleOnce('afterRender', this, this.scrollToElementRunningIndicator);
 
     const payload = {
       action: 'question',
-      choices
+      choices,
+      acceptedDisclaimer: this.get('details.acceptedDisclaimer')
+        ? this.get('details.acceptedDisclaimer')
+        : false
     };
 
     this.set('question', '');
@@ -98,6 +104,7 @@ polarity.export = PolarityComponent.extend({
         Ember.run.scheduleOnce('afterRender', this, this.scrollToErrorMessage);
       })
       .finally(() => {
+        this.set('details.acceptedDisclaimer', false);
         this.set('isRunning', false);
       });
   },
