@@ -100,17 +100,13 @@ function shouldShowDisclaimer(options) {
 
   const cachedDisclaimerTime = disclaimerCache[id];
 
-  const days = getTimeDifferenceInDaysFromNow(cachedDisclaimerTime);
-  return days >= options.disclaimerInterval;
+  const hours = getTimeDifferenceInHoursFromNow(cachedDisclaimerTime);
+  Logger.trace({ hours }, 'Hours since last disclaimer');
+  return hours >= options.disclaimerInterval;
 }
 
-function getTimeDifferenceInDaysFromNow(date) {
+function getTimeDifferenceInHoursFromNow(date) {
   const diffInMs = Math.abs(new Date() - date);
-  return diffInMs / (1000 * 60 * 60 * 24);
-}
-
-function getTimeDifferenceInHours(date1, date2) {
-  const diffInMs = Math.abs(date2 - date1);
   return diffInMs / (1000 * 60 * 60);
 }
 

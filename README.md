@@ -19,6 +19,22 @@ A valid OpenAI Chat GPT API key.
 
 The ID of the model to use when accessing the OpenAI ChatGPT API. Your API key must have access to the model or you will receive a 404 error.
 
+### Show Search Disclaimer
+
+If enabled, the integration will show a disclaimer the user must accept before running a search. 
+
+### Search Disclaimer Content
+
+A disclaimer that users must review before the integration will submit questions to the ChatGPT API.
+
+### Disclaimer Interval
+
+How often to display the disclaimer to users. Restarting the integration will reset the interval timer.
+
+### Log Searches
+
+If enabled, the integration will log all searches sent to ChatGPT including searches where the user did not accept the disclaimer.
+
 ## Installation Instructions
 
 Installation instructions for integrations are provided on the [PolarityIO GitHub Page](https://polarityio.github.io/).

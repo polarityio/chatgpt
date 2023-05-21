@@ -100,8 +100,8 @@ module.exports = {
       key: 'disclaimerInterval',
       name: 'Disclaimer Interval',
       description:
-          'How often to display the disclaimer to users. Restarting the integration will reset the interval timer.',
-      default:         {
+        'How often to display the disclaimer to users. Restarting the integration will reset the interval timer.',
+      default: {
         value: 'all',
         display: 'All searches - disclaimer will be shown before every search (default)'
       },
@@ -112,13 +112,13 @@ module.exports = {
           display: 'All searches - disclaimer will be shown before every new search (default)'
         },
         {
-          value: '24hours',
+          value: '24',
           display: 'Every 24 hours - disclaimer will be shown once per day'
         },
         {
-          value: '7days',
+          value: '168',
           display: 'Every week - disclaimer will be shown once per week'
-        },
+        }
       ],
       multiple: false,
       userCanEdit: false,
@@ -128,11 +128,11 @@ module.exports = {
       key: 'logSearches',
       name: 'Log Searches',
       description:
-          'If enabled, the integration will log all searches sent to ChatGPT.',
+        'If enabled, the integration will log all searches sent to ChatGPT including searches where the user did not accept the disclaimer.',
       default: false,
       type: 'boolean',
       userCanEdit: false,
       adminOnly: true
-    },
+    }
   ]
 };
