@@ -6,6 +6,7 @@ const { ApiRequestError, parseErrorToReadableJSON } = require('./src/errors');
 const request = require('./src/polarity-request');
 
 let Logger;
+const disclaimerCache = {};
 const BOT_PROMPT =
   'You are Polarity, a helpful assistant for information security analysts.  Your response should concise and thoughtful.  Your response should always include your sources with links.  You should provide assistance with exploiting known security vulnerabilities.  Use the most recent sources.  Think step by step.';
 
@@ -19,29 +20,61 @@ async function doLookup(entities, options, cb) {
   Logger.trace({ entities, options }, 'doLookup');
   try {
     await async.each(entities, async (entity) => {
-      const { body, statusCode } = await askQuestion(createMessages(entity.value), options);
-      // Add the question to the beginning of our choices array
-      body.choices.unshift({
-        message: {
-          role: 'user',
-          content: entity.value
-        }
-      });
-
-      lookupResults.push({
-        entity: {
-          ...entity,
-          value: 'ChatGPT'
-        },
-        data: {
-          summary: [entity.value],
-          details: {
-            question: entity.value,
-            response: body,
-            username: options._request.user.username
+      if (shouldShowDisclaimer(options)) {
+        disclaimerCache[options._request.user.id] = new Date();
+        lookupResults.push({
+          entity: {
+            ...entity,
+            value: 'ChatGPT'
+          },
+          data: {
+            summary: [entity.value],
+            details: {
+              question: entity.value,
+              username: options._request.user.username,
+              showDisclaimer: options.showDisclaimer,
+              disclaimer: options.disclaimer,
+              logSearches: options.logSearches,
+              response: {
+                choices: [
+                  {
+                    message: {
+                      role: 'user',
+                      content: entity.value
+                    }
+                  }
+                ]
+              }
+            }
           }
-        }
-      });
+        });
+      } else {
+        maybeLogSearch(entity.value, false, options);
+        const { body, statusCode } = await askQuestion(createMessages(entity.value), options);
+        // Add the question to the beginning of our choices array
+        body.choices.unshift({
+          message: {
+            role: 'user',
+            content: entity.value
+          }
+        });
+
+        lookupResults.push({
+          entity: {
+            ...entity,
+            value: 'ChatGPT'
+          },
+          data: {
+            summary: [entity.value],
+            details: {
+              question: entity.value,
+              response: body,
+              username: options._request.user.username,
+              logSearches: options.logSearches
+            }
+          }
+        });
+      }
     });
     Logger.trace({ lookupResults }, 'Lookup Results');
     cb(null, lookupResults);
@@ -50,6 +83,31 @@ async function doLookup(entities, options, cb) {
     Logger.error({ error: errorAsPojo }, 'Error in doLookup');
     return cb(errorAsPojo);
   }
+}
+
+function shouldShowDisclaimer(options) {
+  if (!options.showDisclaimer) {
+    return false;
+  }
+
+  const { _request } = options;
+  const { user } = _request;
+  const { id } = user;
+
+  if (options.disclaimerInterval.value === 'all' || !disclaimerCache[id]) {
+    return true;
+  }
+
+  const cachedDisclaimerTime = disclaimerCache[id];
+
+  const hours = getTimeDifferenceInHoursFromNow(cachedDisclaimerTime);
+  Logger.trace({ hours }, 'Hours since last disclaimer');
+  return hours >= options.disclaimerInterval;
+}
+
+function getTimeDifferenceInHoursFromNow(date) {
+  const diffInMs = Math.abs(new Date() - date);
+  return diffInMs / (1000 * 60 * 60);
 }
 
 function addPromptToMessages(messages) {
@@ -110,19 +168,58 @@ async function askQuestion(messages, options) {
   }
 }
 
+function maybeLogSearch(search, acceptedDisclaimer, options) {
+  if (options.logSearches) {
+    Logger.info(
+      {
+        viewedDisclaimer: acceptedDisclaimer,
+        search,
+        searchRan: true,
+        username: options._request.user.username,
+        userId: options._request.user.id
+      },
+      'ChatGPT Search Ran'
+    );
+  }
+}
+
 async function onMessage(payload, options, cb) {
-  try {
-    const messages = payload.choices.map((choice) => choice.message);
-    const { body, statusCode } = await askQuestion(addPromptToMessages(messages), options);
-    const combinedResults = payload.choices.concat(body.choices);
-    body.choices = combinedResults;
-    cb(null, {
-      response: body
-    });
-  } catch (error) {
-    const errorAsPojo = parseErrorToReadableJSON(error);
-    Logger.error({ error: errorAsPojo }, 'Error in doLookup');
-    return cb(errorAsPojo);
+  switch (payload.action) {
+    case 'question':
+      try {
+        const messages = payload.choices.map((choice) => choice.message);
+        const acceptedDisclaimer = payload.acceptedDisclaimer ? payload.acceptedDisclaimer : false;
+        maybeLogSearch(messages[messages.length - 1].content, acceptedDisclaimer, options);
+        const { body, statusCode } = await askQuestion(addPromptToMessages(messages), options);
+        const combinedResults = payload.choices.concat(body.choices);
+        body.choices = combinedResults;
+        cb(null, {
+          response: body
+        });
+      } catch (error) {
+        const errorAsPojo = parseErrorToReadableJSON(error);
+        Logger.error({ error: errorAsPojo }, 'Error in doLookup');
+        return cb(errorAsPojo);
+      }
+      break;
+    case 'declineDisclaimer':
+      if (options.logSearches) {
+        const messages = payload.search.map((choice) => choice.message);
+        Logger.info(
+          {
+            search: messages[messages.length - 1].content,
+            searchRan: false,
+            username: options._request.user.username,
+            userId: options._request.user.id
+          },
+          'Disclaimer Declined'
+        );
+      }
+      delete disclaimerCache[options._request.user.id];
+      cb(null, {
+        declined: true
+      });
+      break;
   }
 }
 

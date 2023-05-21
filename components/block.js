@@ -30,48 +30,83 @@ polarity.export = PolarityComponent.extend({
       Ember.run.scheduleOnce('destroy', this, this.restoreCopyState);
     },
     submitQuestion: function () {
-      if (this.get('isRunning') === true) {
-        return;
-      }
+      this.submitQuestion();
+    },
+    acceptDisclaimer: function () {
+      this.set('details.showDisclaimer', false);
+      this.set('details.acceptedDisclaimer', true);
+      this.submitQuestion();
+    },
+    declineDisclaimer: function () {
+      const payload = {
+        action: 'declineDisclaimer',
+        search: this.get('details.response.choices')
+      };
 
-      this.set('isRunning', true);
-      let choices = this.get('details.response.choices');
+      this.sendIntegrationMessage(payload)
+        .then((result) => {
+          this.set('details.response.choices', []);
+          this.set('details.showDisclaimer', false);
+          this.set('details.disclaimerDeclined', true);
+        })
+        .catch((error) => {
+          console.error(error);
+          this.set('errorMessage', JSON.stringify(error, null, 2));
+          Ember.run.scheduleOnce('afterRender', this, this.scrollToErrorMessage);
+        });
+    },
+    closeError: function () {
+      this.set('errorMessage', '');
+    }
+  },
+  submitQuestion() {
+    if (this.get('isRunning') === true) {
+      return;
+    }
+
+    this.set('isRunning', true);
+    let choices = this.get('details.response.choices');
+
+    // If we're showing the disclaimer then there will be no question
+    // and we don't need to add anything to the choices array.
+    if (this.get('question')) {
       choices.push({
         message: {
           role: 'user',
           content: this.get('question')
         }
       });
-
-      this.get('block').notifyPropertyChange('data');
-
-      Ember.run.scheduleOnce('afterRender', this, this.scrollToElementRunningIndicator);
-
-      const payload = {
-        action: 'question',
-        choices
-      };
-
-      this.set('question', '');
-
-      this.sendIntegrationMessage(payload)
-        .then((result) => {
-          this.set('details.response', result.response);
-          const choices = this.get('details.response.choices');
-          Ember.run.scheduleOnce('afterRender', this, this.scrollToChoiceIndex, choices.length - 1);
-        })
-        .catch((error) => {
-          console.error(error);
-          this.set('errorMessage', JSON.stringify(error, null, 2));
-          Ember.run.scheduleOnce('afterRender', this, this.scrollToErrorMessage);
-        })
-        .finally(() => {
-          this.set('isRunning', false);
-        });
-    },
-    closeError: function(){
-      this.set('errorMessage', '');
     }
+    this.set('details.disclaimerDeclined', false);
+    this.get('block').notifyPropertyChange('data');
+
+    Ember.run.scheduleOnce('afterRender', this, this.scrollToElementRunningIndicator);
+
+    const payload = {
+      action: 'question',
+      choices,
+      acceptedDisclaimer: this.get('details.acceptedDisclaimer')
+        ? this.get('details.acceptedDisclaimer')
+        : false
+    };
+
+    this.set('question', '');
+
+    this.sendIntegrationMessage(payload)
+      .then((result) => {
+        this.set('details.response', result.response);
+        const choices = this.get('details.response.choices');
+        Ember.run.scheduleOnce('afterRender', this, this.scrollToChoiceIndex, choices.length - 1);
+      })
+      .catch((error) => {
+        console.error(error);
+        this.set('errorMessage', JSON.stringify(error, null, 2));
+        Ember.run.scheduleOnce('afterRender', this, this.scrollToErrorMessage);
+      })
+      .finally(() => {
+        this.set('details.acceptedDisclaimer', false);
+        this.set('isRunning', false);
+      });
   },
   scrollToChoiceIndex(index) {
     let doc = document.getElementById(`chatgpt-choice-${index}-${this.get('uniqueIdPrefix')}`);
